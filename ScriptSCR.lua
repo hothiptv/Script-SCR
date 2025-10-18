@@ -1,15 +1,20 @@
--- Nhập code user
-local userCode = [[
-local SCR = loadstring("https://raw.githubusercontent.com/hothiptv/Script-SCR/main/ScriptSCR.lua")(), 0904
-awd "SCR HUB","ConfigSCR"
-]]
+-- Dòng 1: Kiểm tra mật khẩu
+local function pw(key)
+    if key ~= "0904" then
+        game:GetService("StarterGui"):SetCore("SendNotification", {
+            Title = "SCR HUB";
+            Text = "MẬT KHẨU SAI!";
+            Duration = 3;
+        })
+        return false
+    end
+    return true
+end
 
--- Kiểm tra mật khẩu và awd
-if string.find(userCode,"0904") and string.find(userCode,"awd") then
-    -- Load script SCR
-    local SCR = loadstring(game:HttpGet("https://raw.githubusercontent.com/hothiptv/Script-SCR/main/ScriptSCR.lua"))()
+if not pw("0904") then return end
 
-    -- Tạo window UI
+-- Dòng 2: Tạo UI (block awd riêng)
+local function awd(nameUI, configFile)
     local player = game.Players.LocalPlayer
     local gui = Instance.new("ScreenGui")
     gui.Name = "SCR_HUB_UI"
@@ -25,7 +30,6 @@ if string.find(userCode,"0904") and string.find(userCode,"awd") then
     frame.Active = true
     frame.Draggable = true
 
-    -- Top bar + nút đóng, ẩn
     local topBar = Instance.new("Frame", frame)
     topBar.Size = UDim2.new(1,0,0,40)
     topBar.Position = UDim2.new(0,0,0,0)
@@ -70,21 +74,15 @@ if string.find(userCode,"0904") and string.find(userCode,"awd") then
         hiddenBtn.Visible = false
     end)
 
-    -- Text SCR HUB
     local title = Instance.new("TextLabel", frame)
     title.Size = UDim2.new(1,0,0,50)
     title.Position = UDim2.new(0,0,0,50)
     title.BackgroundTransparency = 1
-    title.Text = "SCR HUB"
+    title.Text = nameUI
     title.TextColor3 = Color3.fromRGB(0,150,255)
     title.Font = Enum.Font.SourceSansBold
     title.TextScaled = true
-
-else
-    -- Nếu không có awd hoặc mật khẩu sai
-    game:GetService("StarterGui"):SetCore("SendNotification", {
-        Title = "SCR HUB";
-        Text = "CODE CHƯA ĐÚNG!";
-        Duration = 3;
-    })
 end
+
+-- Gọi awd với tên UI và file config
+awd("SCR HUB","ConfigSCR")
