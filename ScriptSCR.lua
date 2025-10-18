@@ -1,4 +1,4 @@
--- LocalScript SCR HUB trực tiếp (không loadstring)
+-- LocalScript SCR HUB
 local Player = game.Players.LocalPlayer
 local PlayerGui = Player:WaitForChild("PlayerGui")
 
@@ -8,11 +8,11 @@ local Engine = {
 }
 
 -- Hàm tạo UI
-function awd(name, config)
+local function createUI(name, config)
     if Engine.UI_Created then return end
     Engine.UI_Created = true
 
-    -- Tạo ScreenGui
+    -- ScreenGui
     local gui = Instance.new("ScreenGui")
     gui.Name = "SCR_HUB_UI"
     gui.Parent = PlayerGui
@@ -36,7 +36,7 @@ function awd(name, config)
     title.Font = Enum.Font.SourceSansBold
     title.TextScaled = true
 
-    -- Nút đóng
+    -- Nút đóng UI
     local closeBtn = Instance.new("TextButton", frame)
     closeBtn.Size = UDim2.new(0,40,0,30)
     closeBtn.Position = UDim2.new(1,-50,0,5)
@@ -58,7 +58,7 @@ function awd(name, config)
     hideCorner.CornerRadius = UDim.new(0.3,0)
     hideBtn.MouseButton1Click:Connect(function()
         frame.Visible = false
-        -- Tạo nút hiện UI
+        -- Nút hiện UI
         local showBtn = Instance.new("TextButton", gui)
         showBtn.Size = UDim2.new(0,80,0,40)
         showBtn.Position = UDim2.new(0.5,-40,0,10)
@@ -72,10 +72,5 @@ function awd(name, config)
     end)
 end
 
--- Engine trả về hàm awd
-local SCR = {
-    awd = awd
-}
-
--- Ví dụ sử dụng:
-SCR.awd("SCR HUB","SCR_config")
+-- Gọi hàm tạo UI
+createUI("SCR HUB","SCR_config")
