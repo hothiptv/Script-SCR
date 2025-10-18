@@ -1,7 +1,6 @@
--- LocalScript SCR HUB Intro -> Main UI với nút ẩn/hiện
+-- LocalScript SCR HUB với fade in/out
 local Player = game.Players.LocalPlayer
 local PlayerGui = Player:WaitForChild("PlayerGui")
-local Engine = {UI_Created=false, ScriptName="SCR VN"}
 
 -- ===================
 -- Splash screen nhỏ
@@ -23,20 +22,20 @@ splashText.TextColor3 = Color3.fromRGB(0,200,255)
 splashText.Font = Enum.Font.SourceSansBold
 splashText.TextScaled = true
 
--- Hiệu ứng chữ SCR VN xuất hiện từng ký tự
+-- Hiệu ứng chữ xuất hiện nhanh
 local textToShow = "SCR VN"
 for i = 1,#textToShow do
     splashText.Text = string.sub(textToShow,1,i)
-    wait(0.2)
+    wait(0.05)
 end
 
 -- ===================
--- Splash to dần thành UI chính
+-- Main UI
 -- ===================
-local mainGui = Instance.new("ScreenGui", PlayerGui)
-mainGui.Name = "SCR_HUB_UI"
+local gui = Instance.new("ScreenGui", PlayerGui)
+gui.Name = "SCR_HUB_UI"
 
-local frame = Instance.new("Frame", mainGui)
+local frame = Instance.new("Frame", gui)
 frame.Size = UDim2.new(0,200,0,100)
 frame.Position = UDim2.new(0.5,-100,0.5,-50)
 frame.BackgroundColor3 = Color3.fromRGB(80,80,80)
@@ -45,37 +44,40 @@ frame.BorderColor3 = Color3.new(0,0,0)
 frame.Active = true
 frame.Draggable = true
 
+-- Gradient
 local uiGradient = Instance.new("UIGradient", frame)
 uiGradient.Color = ColorSequence.new{
-    ColorSequenceKeypoint.new(0, Color3.fromRGB(160,160,160)), -- trên nhạt
-    ColorSequenceKeypoint.new(1, Color3.fromRGB(60,60,60))     -- dưới đậm
+    ColorSequenceKeypoint.new(0, Color3.fromRGB(160,160,160)),
+    ColorSequenceKeypoint.new(1, Color3.fromRGB(60,60,60))
 }
 
 -- Hiệu ứng to dần
 for i = 0,1,0.05 do
     frame.Size = UDim2.new(0,200 + 400*i,0,100 + 300*i)
     frame.Position = UDim2.new(0.5,-(100+200*i),0.5,-(50+150*i))
+    frame.BackgroundTransparency = 1 - i
     wait(0.03)
 end
 
--- Xóa splash screen
+-- Xóa splash
 splashGui:Destroy()
 
--- Tiêu đề (dòng chữ người dùng đặt)
+-- Dòng chữ nhỏ, nhìn xuyên
 local title = Instance.new("TextLabel", frame)
-title.Size = UDim2.new(1,0,0,50)
+title.Size = UDim2.new(1,0,0,40)
 title.Position = UDim2.new(0,0,0,10)
 title.Text = ""
 title.TextColor3 = Color3.fromRGB(0,50,150)
+title.TextTransparency = 0.3
 title.Font = Enum.Font.SourceSansBold
 title.TextScaled = true
 
--- Hàm hiển thị chữ theo hiệu ứng từng ký tự
+-- Hiệu ứng chữ xuất hiện nhanh
 local function setTitle(text)
     title.Text = ""
     for i = 1,#text do
         title.Text = string.sub(text,1,i)
-        wait(0.1)
+        wait(0.03)
     end
 end
 
@@ -87,9 +89,6 @@ closeBtn.Text = "X"
 closeBtn.BackgroundColor3 = Color3.fromRGB(20,20,20)
 local closeCorner = Instance.new("UICorner", closeBtn)
 closeCorner.CornerRadius = UDim.new(0.3,0)
-closeBtn.MouseButton1Click:Connect(function()
-    mainGui:Destroy()
-end)
 
 -- Nút ẩn/hiện
 local hideBtn = Instance.new("TextButton", frame)
@@ -101,9 +100,27 @@ local hideCorner = Instance.new("UICorner", hideBtn)
 hideCorner.CornerRadius = UDim.new(0.3,0)
 local hiddenGuiBtn = nil
 
+-- Hiệu ứng fade-out UI
+local function fadeOut()
+    for i = 0,1,0.05 do
+        frame.BackgroundTransparency = i
+        title.TextTransparency = 0.3 + i*0.7
+        wait(0.02)
+    end
+end
+
+-- Hiệu ứng fade-in UI
+local function fadeIn()
+    for i = 1,0,-0.05 do
+        frame.BackgroundTransparency = i
+        title.TextTransparency = 0.3 + i*0.7
+        wait(0.02)
+    end
+end
+
 hideBtn.MouseButton1Click:Connect(function()
     frame.Visible = false
-    -- Tạo nút tròn di chuyển để hiện UI lại
+    -- Nút tròn hiện lại
     hiddenGuiBtn = Instance.new("TextButton", PlayerGui)
     hiddenGuiBtn.Size = UDim2.new(0,40,0,40)
     hiddenGuiBtn.Position = UDim2.new(0.5,-20,0,50)
@@ -115,14 +132,19 @@ hideBtn.MouseButton1Click:Connect(function()
     hiddenGuiBtn.Draggable = true
     hiddenGuiBtn.MouseButton1Click:Connect(function()
         frame.Visible = true
+        fadeIn()
         hiddenGuiBtn:Destroy()
     end)
 end)
 
--- Lệnh đặt tên script
+closeBtn.MouseButton1Click:Connect(function()
+    fadeOut()
+    gui:Destroy()
+end)
+
+-- Đặt tên script với hiệu ứng
 function name(scriptName)
     if not scriptName or scriptName == "" then return end
-    Engine.ScriptName = scriptName
     setTitle(scriptName)
 end
 
