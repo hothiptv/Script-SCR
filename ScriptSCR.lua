@@ -1,12 +1,13 @@
 local SCR = (function()
-    local plr = game.Players.LocalPlayer
-    local gui = Instance.new("ScreenGui", plr:WaitForChild("PlayerGui"))
-    gui.Name = "SCR_HUB"
-
     local SCRObj = {}
 
     function SCRObj:MakeWindow(config)
-        -- Frame chính
+        local plr = game.Players.LocalPlayer
+        local gui = Instance.new("ScreenGui")
+        gui.Name = "SCR_HUB"
+        gui.Parent = plr:WaitForChild("PlayerGui")
+
+        -- Main Frame
         local frame = Instance.new("Frame", gui)
         frame.Size = UDim2.new(0,500,0,400)
         frame.Position = UDim2.new(0.5,-250,0.5,-200)
@@ -28,7 +29,7 @@ local SCR = (function()
         title.TextColor3 = Color3.fromRGB(0,50,150)
         title.BackgroundTransparency = 1
 
-        -- Nút đóng
+        -- Close button
         local closeBtn = Instance.new("TextButton", frame)
         closeBtn.Size = UDim2.new(0,40,0,40)
         closeBtn.Position = UDim2.new(1,-50,0,10)
@@ -40,7 +41,7 @@ local SCR = (function()
             gui:Destroy()
         end)
 
-        -- Nút ẩn
+        -- Hide button
         local hideBtn = Instance.new("TextButton", frame)
         hideBtn.Size = UDim2.new(0,40,0,40)
         hideBtn.Position = UDim2.new(1,-100,0,10)
@@ -48,7 +49,7 @@ local SCR = (function()
         hideBtn.BackgroundColor3 = Color3.fromRGB(0,0,0)
         Instance.new("UICorner", hideBtn).CornerRadius = UDim.new(0.5,0)
 
-        -- Nút hiện UI tròn
+        -- Hidden button
         local hiddenBtn = Instance.new("TextButton", gui)
         hiddenBtn.Size = UDim2.new(0,60,0,60)
         hiddenBtn.Position = UDim2.new(0.5,-30,0,10)
@@ -60,12 +61,12 @@ local SCR = (function()
         hiddenBtn.Draggable = true
 
         hideBtn.MouseButton1Click:Connect(function()
-            frame.Visible=false
-            hiddenBtn.Visible=true
+            frame.Visible = false
+            hiddenBtn.Visible = true
         end)
         hiddenBtn.MouseButton1Click:Connect(function()
-            frame.Visible=true
-            hiddenBtn.Visible=false
+            frame.Visible = true
+            hiddenBtn.Visible = false
         end)
 
         -- TextBox
@@ -79,7 +80,7 @@ local SCR = (function()
         textBox.TextScaled = true
         Instance.new("UICorner", textBox).CornerRadius = UDim.new(0.2,0)
 
-        -- Nút Rejoin
+        -- Rejoin button
         local rejoinBtn = Instance.new("TextButton", frame)
         rejoinBtn.Size = UDim2.new(0,120,0,40)
         rejoinBtn.Position = UDim2.new(0,20,0,130)
