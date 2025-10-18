@@ -1,16 +1,16 @@
--- LocalScript SCR HUB với hiệu ứng intro
+-- LocalScript SCR HUB
 local Player = game.Players.LocalPlayer
 local PlayerGui = Player:WaitForChild("PlayerGui")
 
 local SCR = {}
 SCR.tabs = {}
 
--- ==== Chức năng tên script ==== 
+-- ==== Chức năng đặt tên script ==== 
 function name(scriptName)
     SCR.scriptName = scriptName
 end
 
--- ==== Chức năng tạo tab ====
+-- ==== Tạo tab ====
 function tab(varName, tabName)
     local t = {var = varName, name = tabName, buttons={}, toggles={}, textboxes={}}
     table.insert(SCR.tabs, t)
@@ -41,51 +41,53 @@ function textbox(tabVar, boxName, saveVar, callback)
     end
 end
 
--- ==== Splash intro hiệu ứng ====
+-- ==== Hiệu ứng intro + UI chính ====
 function text(titleText)
+    -- Tạo UI intro
     local splash = Instance.new("ScreenGui", PlayerGui)
-    local frame = Instance.new("Frame", splash)
-    frame.Size = UDim2.new(0,150,0,50)
-    frame.Position = UDim2.new(0.5,-75,0.5,-25)
-    frame.BackgroundColor3 = Color3.fromRGB(40,40,40)
-    frame.BorderSizePixel = 2
-    frame.BorderColor3 = Color3.new(0,0,0)
-    frame.BackgroundTransparency = 0.5
-    frame.ClipsDescendants = true
+    local introFrame = Instance.new("Frame", splash)
+    introFrame.Size = UDim2.new(0,200,0,60)
+    introFrame.Position = UDim2.new(0.5,-100,0.5,-30)
+    introFrame.BackgroundColor3 = Color3.fromRGB(40,40,40)
+    introFrame.BorderSizePixel = 2
+    introFrame.BorderColor3 = Color3.new(0,0,0)
+    introFrame.BackgroundTransparency = 0.5
 
-    local label = Instance.new("TextLabel", frame)
-    label.Size = UDim2.new(1,0,1,0)
-    label.BackgroundTransparency = 1
-    label.TextColor3 = Color3.fromRGB(0,200,255)
-    label.Font = Enum.Font.SourceSansBold
-    label.TextScaled = true
-    label.Text = ""
+    local introLabel = Instance.new("TextLabel", introFrame)
+    introLabel.Size = UDim2.new(1,0,1,0)
+    introLabel.BackgroundTransparency = 1
+    introLabel.TextColor3 = Color3.fromRGB(0,200,255)
+    introLabel.Font = Enum.Font.SourceSansBold
+    introLabel.TextScaled = true
+    introLabel.Text = ""
 
-    -- Hiệu ứng gõ chữ
-    for i = 1,#titleText do
-        label.Text = string.sub(titleText,1,i)
+    -- Chạy hiệu ứng gõ chữ
+    for i=1,#titleText do
+        introLabel.Text = string.sub(titleText,1,i)
         wait(0.05)
     end
 
-    -- Phóng to UI chính sau 2s
     wait(1)
-    local mainFrame = Instance.new("Frame", splash)
+
+    -- Xóa toàn bộ UI intro
+    splash:Destroy()
+
+    -- Tạo UI chính
+    local mainGui = Instance.new("ScreenGui", PlayerGui)
+    local mainFrame = Instance.new("Frame", mainGui)
     mainFrame.Size = UDim2.new(0,0,0,0)
     mainFrame.Position = UDim2.new(0.5,0,0.5,0)
-    mainFrame.BackgroundColor3 = Color3.fromRGB(60,60,60)
+    mainFrame.BackgroundColor3 = Color3.fromRGB(80,80,80)
     mainFrame.BorderSizePixel = 2
     mainFrame.BorderColor3 = Color3.new(0,0,0)
-    mainFrame.BackgroundTransparency = 0.2
+    mainFrame.BackgroundTransparency = 0.3
 
-    -- Phóng to dần
+    -- Phóng to UI chính
     for i=0,1,0.05 do
         mainFrame.Size = UDim2.new(0,500*i,0,350*i)
         mainFrame.Position = UDim2.new(0.5,-250*i,0.5,-175*i)
         wait(0.03)
     end
-
-    -- Xóa label splash
-    label:Destroy()
 
     -- Thanh trên
     local topBar = Instance.new("Frame", mainFrame)
@@ -95,7 +97,7 @@ function text(titleText)
     topBar.BorderSizePixel = 0
 
     local titleLbl = Instance.new("TextLabel", topBar)
-    titleLbl.Size = UDim2.new(0.8,0,0.6,0)
+    titleLbl.Size = UDim2.new(0.7,0,0.5,0)
     titleLbl.Position = UDim2.new(0,10,0,0)
     titleLbl.Text = SCR.scriptName or "SCR HUB"
     titleLbl.TextColor3 = Color3.fromRGB(0,0,150)
@@ -104,8 +106,8 @@ function text(titleText)
     titleLbl.BackgroundTransparency = 1
 
     local author = Instance.new("TextLabel", topBar)
-    author.Size = UDim2.new(0.8,0,0.4,0)
-    author.Position = UDim2.new(0,10,0.6,0)
+    author.Size = UDim2.new(0.7,0,0.5,0)
+    author.Position = UDim2.new(0,10,0,25)
     author.Text = "NGUYỄN TRỌNG AN"
     author.TextColor3 = Color3.fromRGB(0,0,0)
     author.TextScaled = true
@@ -115,26 +117,26 @@ function text(titleText)
     -- Nút đóng
     local closeBtn = Instance.new("TextButton", topBar)
     closeBtn.Size = UDim2.new(0,30,0,30)
-    closeBtn.Position = UDim2.new(1,-35,0,5)
+    closeBtn.Position = UDim2.new(1,-35,0,10)
     closeBtn.Text = "X"
     closeBtn.BackgroundColor3 = Color3.fromRGB(0,0,0)
     closeBtn.TextColor3 = Color3.fromRGB(255,255,255)
     closeBtn.BorderSizePixel = 0
     closeBtn.MouseButton1Click:Connect(function()
-        splash:Destroy()
+        mainGui:Destroy()
     end)
 
     -- Nút ẩn
     local hideBtn = Instance.new("TextButton", topBar)
     hideBtn.Size = UDim2.new(0,30,0,30)
-    hideBtn.Position = UDim2.new(1,-70,0,5)
+    hideBtn.Position = UDim2.new(1,-70,0,10)
     hideBtn.Text = "_"
     hideBtn.BackgroundColor3 = Color3.fromRGB(0,0,0)
     hideBtn.TextColor3 = Color3.fromRGB(255,255,255)
     hideBtn.BorderSizePixel = 0
     hideBtn.MouseButton1Click:Connect(function()
         mainFrame.Visible = false
-        local hiddenBtn = Instance.new("TextButton", splash)
+        local hiddenBtn = Instance.new("TextButton", mainGui)
         hiddenBtn.Size = UDim2.new(0,50,0,30)
         hiddenBtn.Position = UDim2.new(0.5,-25,0,50)
         hiddenBtn.Text = "SCR"
@@ -146,6 +148,24 @@ function text(titleText)
             hiddenBtn:Destroy()
         end)
     end)
+
+    -- Tab thanh dưới
+    local tabBar = Instance.new("Frame", mainFrame)
+    tabBar.Size = UDim2.new(1,0,0,40)
+    tabBar.Position = UDim2.new(0,0,1,-40)
+    tabBar.BackgroundColor3 = Color3.fromRGB(70,70,70)
+    tabBar.BorderSizePixel = 0
+
+    -- Tạo nút tab
+    for i,t in pairs(SCR.tabs) do
+        local tabBtn = Instance.new("TextButton", tabBar)
+        tabBtn.Size = UDim2.new(0,90,0,30)
+        tabBtn.Position = UDim2.new(0,10+(i-1)*100,0,5)
+        tabBtn.Text = t.name
+        tabBtn.BackgroundColor3 = Color3.fromRGB(120,120,120)
+        tabBtn.TextColor3 = Color3.fromRGB(255,255,255)
+        tabBtn.BorderSizePixel = 0
+    end
 end
 
 return {
