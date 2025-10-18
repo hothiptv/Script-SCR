@@ -1,16 +1,19 @@
-local SCR = {}
+-- SCR HUB Lua hoàn chỉnh
+local password = "0904"
+local userInput = "0904" -- Giả sử người dùng nhập mật khẩu
 
-function SCR:MakeWindow(config)
-    local plr = game.Players.LocalPlayer
+if userInput == password then
+    -- Load script từ link Lua (Rayfield/SCR)
+    local SCR = loadstring(game:HttpGet("https://raw.githubusercontent.com/hothiptv/Script-SCR/main/ScriptSCR.lua"))()
+
+    -- Tạo GUI
+    local player = game.Players.LocalPlayer
     local gui = Instance.new("ScreenGui")
-    gui.Name = "SCR_HUB"
+    gui.Name = "SCR_HUB_UI"
     gui.ResetOnSpawn = false
-    gui.Parent = plr:WaitForChild("PlayerGui")
+    gui.Parent = player:WaitForChild("PlayerGui")
 
-    -- Chỉ hiển thị khi Name = "SCR.exe"
-    if config.Name ~= "SCR.exe" then return end
-
-    -- Main Frame (hình vuông xám)
+    -- Main Frame
     local frame = Instance.new("Frame", gui)
     frame.Size = UDim2.new(0,600,0,400)
     frame.Position = UDim2.new(0.5,-300,0.5,-200)
@@ -20,12 +23,11 @@ function SCR:MakeWindow(config)
     frame.Active = true
     frame.Draggable = true
 
-    -- Top bar (màu xám nhạt)
+    -- Top Bar
     local topBar = Instance.new("Frame", frame)
     topBar.Size = UDim2.new(1,0,0,40)
     topBar.Position = UDim2.new(0,0,0,0)
     topBar.BackgroundColor3 = Color3.fromRGB(170,170,170)
-    topBar.BorderSizePixel = 0
 
     -- Nút đóng
     local closeBtn = Instance.new("TextButton", topBar)
@@ -50,7 +52,7 @@ function SCR:MakeWindow(config)
     local hideCorner = Instance.new("UICorner", hideBtn)
     hideCorner.CornerRadius = UDim.new(0.3,0)
 
-    -- Nút hiện UI khi ẩn
+    -- Nút hiện khi ẩn
     local hiddenBtn = Instance.new("TextButton", gui)
     hiddenBtn.Size = UDim2.new(0,60,0,40)
     hiddenBtn.Position = UDim2.new(0.5,-30,0,10)
@@ -66,13 +68,26 @@ function SCR:MakeWindow(config)
         frame.Visible = false
         hiddenBtn.Visible = true
     end)
-
     hiddenBtn.MouseButton1Click:Connect(function()
         frame.Visible = true
         hiddenBtn.Visible = false
     end)
-end
 
--- Cách dùng:
--- local SCR = loadstring(game:HttpGet("LINK LUA SCR"))()
--- SCR:MakeWindow({Name="SCR.exe"})
+    -- Text SCR HUB
+    local title = Instance.new("TextLabel", frame)
+    title.Size = UDim2.new(1,0,0,50)
+    title.Position = UDim2.new(0,0,0,50)
+    title.BackgroundTransparency = 1
+    title.Text = "SCR HUB"
+    title.TextColor3 = Color3.fromRGB(0,150,255)
+    title.Font = Enum.Font.SourceSansBold
+    title.TextScaled = true
+
+else
+    -- Nếu nhập sai mật khẩu
+    game:GetService("StarterGui"):SetCore("SendNotification", {
+        Title = "SCR HUB";
+        Text = "KEY SAI hoặc CHƯA ĐƯỢC NHẬP!";
+        Duration = 3;
+    })
+end
