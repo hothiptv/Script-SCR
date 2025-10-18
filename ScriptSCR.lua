@@ -1,10 +1,10 @@
--- LocalScript SCR HUB với hiệu ứng
+-- LocalScript SCR HUB
 local Player = game.Players.LocalPlayer
 local PlayerGui = Player:WaitForChild("PlayerGui")
-local Engine = {UI_Created = false}
+local Engine = {UI_Created = false, ScriptName = nil}
 
--- Hàm tạo UI
-local function createUI(name, config)
+-- Hàm tạo UI SCR HUB với hiệu ứng gradient xám
+local function createSCRHub(scriptName)
     if Engine.UI_Created then return end
     Engine.UI_Created = true
 
@@ -15,36 +15,28 @@ local function createUI(name, config)
     local frame = Instance.new("Frame", gui)
     frame.Size = UDim2.new(0,600,0,400)
     frame.Position = UDim2.new(0.5,-300,0.5,-200)
-    frame.BackgroundColor3 = Color3.fromRGB(50,150,255)
+    frame.BackgroundColor3 = Color3.fromRGB(100,100,100)
+    frame.BackgroundTransparency = 0.4 -- nhìn xuyên
     frame.BorderSizePixel = 3
     frame.BorderColor3 = Color3.new(0,0,0)
     frame.Active = true
     frame.Draggable = true
-    frame.BackgroundTransparency = 1  -- bắt đầu trong suốt
 
-    -- Fade in UI
-    for i = 0,1,0.05 do
-        frame.BackgroundTransparency = 1 - i
-        wait(0.03)
-    end
+    -- Gradient từ trên nhạt xuống dưới đậm
+    local uiGradient = Instance.new("UIGradient", frame)
+    uiGradient.Color = ColorSequence.new{
+        ColorSequenceKeypoint.new(0, Color3.fromRGB(160,160,160)), -- trên nhạt
+        ColorSequenceKeypoint.new(1, Color3.fromRGB(60,60,60))     -- dưới đậm
+    }
 
     -- Tiêu đề
     local title = Instance.new("TextLabel", frame)
     title.Size = UDim2.new(1,0,0,50)
     title.Position = UDim2.new(0,0,0,10)
-    title.Text = ""
+    title.Text = scriptName
     title.TextColor3 = Color3.fromRGB(0,50,150)
     title.Font = Enum.Font.SourceSansBold
     title.TextScaled = true
-
-    -- Hiệu ứng chữ xuất hiện từng ký tự
-    local text = name
-    spawn(function()
-        for i = 1,#text do
-            title.Text = string.sub(text,1,i)
-            wait(0.05)
-        end
-    end)
 
     -- Nút đóng
     local closeBtn = Instance.new("TextButton", frame)
@@ -56,30 +48,19 @@ local function createUI(name, config)
     closeCorner.CornerRadius = UDim.new(0.3,0)
     closeBtn.MouseButton1Click:Connect(function()
         gui:Destroy()
-    end)
-
-    -- Nút ẩn UI
-    local hideBtn = Instance.new("TextButton", frame)
-    hideBtn.Size = UDim2.new(0,60,0,30)
-    hideBtn.Position = UDim2.new(1,-120,0,5)
-    hideBtn.Text = "Ẩn"
-    hideBtn.BackgroundColor3 = Color3.fromRGB(20,20,20)
-    local hideCorner = Instance.new("UICorner", hideBtn)
-    hideCorner.CornerRadius = UDim.new(0.3,0)
-    hideBtn.MouseButton1Click:Connect(function()
-        frame.Visible = false
-        local showBtn = Instance.new("TextButton", gui)
-        showBtn.Size = UDim2.new(0,80,0,40)
-        showBtn.Position = UDim2.new(0.5,-40,0,10)
-        showBtn.Text = "Hiện UI"
-        local showCorner = Instance.new("UICorner", showBtn)
-        showCorner.CornerRadius = UDim.new(0.3,0)
-        showBtn.MouseButton1Click:Connect(function()
-            frame.Visible = true
-            showBtn:Destroy()
-        end)
+        Engine.UI_Created = false
     end)
 end
 
--- Lệnh gọi UI
-createUI("SCR HUB","SCR_config")
+-- Lệnh bắt buộc đặt tên script
+function name(scriptName)
+    if scriptName == nil or scriptName == "" then
+        warn("Bạn phải đặt tên script để UI hiện!")
+        return
+    end
+    Engine.ScriptName = scriptName
+    createSCRHub(scriptName)
+end
+
+-- Ví dụ:
+-- name("SCR HUB")  -- UI sẽ xuất hiện với gradient xám
