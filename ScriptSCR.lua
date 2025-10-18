@@ -49,7 +49,7 @@ local SCR = (function()
         hideBtn.BackgroundColor3 = Color3.fromRGB(0,0,0)
         Instance.new("UICorner", hideBtn).CornerRadius = UDim.new(0.5,0)
 
-        -- Hidden button
+        -- Hidden button (hiện UI khi ẩn)
         local hiddenBtn = Instance.new("TextButton", gui)
         hiddenBtn.Size = UDim2.new(0,60,0,60)
         hiddenBtn.Position = UDim2.new(0.5,-30,0,10)
