@@ -1,33 +1,6 @@
--- LocalScript SCR HUB với fade in/out
+-- LocalScript SCR HUB nâng cấp
 local Player = game.Players.LocalPlayer
 local PlayerGui = Player:WaitForChild("PlayerGui")
-
--- ===================
--- Splash screen nhỏ
--- ===================
-local splashGui = Instance.new("ScreenGui", PlayerGui)
-splashGui.Name = "SCR_SPLASH"
-
-local splashFrame = Instance.new("Frame", splashGui)
-splashFrame.Size = UDim2.new(0,200,0,100)
-splashFrame.Position = UDim2.new(0.5,-100,0.5,-50)
-splashFrame.BackgroundColor3 = Color3.fromRGB(50,50,50)
-splashFrame.BorderSizePixel = 3
-splashFrame.BorderColor3 = Color3.new(0,0,0)
-
-local splashText = Instance.new("TextLabel", splashFrame)
-splashText.Size = UDim2.new(1,0,1,0)
-splashText.Text = ""
-splashText.TextColor3 = Color3.fromRGB(0,200,255)
-splashText.Font = Enum.Font.SourceSansBold
-splashText.TextScaled = true
-
--- Hiệu ứng chữ xuất hiện nhanh
-local textToShow = "SCR VN"
-for i = 1,#textToShow do
-    splashText.Text = string.sub(textToShow,1,i)
-    wait(0.05)
-end
 
 -- ===================
 -- Main UI
@@ -36,8 +9,8 @@ local gui = Instance.new("ScreenGui", PlayerGui)
 gui.Name = "SCR_HUB_UI"
 
 local frame = Instance.new("Frame", gui)
-frame.Size = UDim2.new(0,200,0,100)
-frame.Position = UDim2.new(0.5,-100,0.5,-50)
+frame.Size = UDim2.new(0,400,0,300) -- UI to hơn
+frame.Position = UDim2.new(0.5,-200,0.5,-150)
 frame.BackgroundColor3 = Color3.fromRGB(80,80,80)
 frame.BorderSizePixel = 3
 frame.BorderColor3 = Color3.new(0,0,0)
@@ -47,39 +20,33 @@ frame.Draggable = true
 -- Gradient
 local uiGradient = Instance.new("UIGradient", frame)
 uiGradient.Color = ColorSequence.new{
-    ColorSequenceKeypoint.new(0, Color3.fromRGB(160,160,160)),
-    ColorSequenceKeypoint.new(1, Color3.fromRGB(60,60,60))
+    ColorSequenceKeypoint.new(0, Color3.fromRGB(160,160,160)), -- trên nhạt
+    ColorSequenceKeypoint.new(1, Color3.fromRGB(60,60,60))     -- dưới đậm
 }
 
--- Hiệu ứng to dần
-for i = 0,1,0.05 do
-    frame.Size = UDim2.new(0,200 + 400*i,0,100 + 300*i)
-    frame.Position = UDim2.new(0.5,-(100+200*i),0.5,-(50+150*i))
-    frame.BackgroundTransparency = 1 - i
-    wait(0.03)
-end
+-- Icon góc
+local icon = Instance.new("ImageLabel", frame)
+icon.Size = UDim2.new(0,40,0,40)
+icon.Position = UDim2.new(0,10,0,10)
+icon.BackgroundTransparency = 1
+icon.Image = "rbxassetid://6023426915" -- ví dụ icon
 
--- Xóa splash
-splashGui:Destroy()
-
--- Dòng chữ nhỏ, nhìn xuyên
+-- Tiêu đề
 local title = Instance.new("TextLabel", frame)
-title.Size = UDim2.new(1,0,0,40)
-title.Position = UDim2.new(0,0,0,10)
-title.Text = ""
+title.Size = UDim2.new(1,-60,0,40)
+title.Position = UDim2.new(0,60,0,10)
+title.Text = "SCR HUB"
 title.TextColor3 = Color3.fromRGB(0,50,150)
 title.TextTransparency = 0.3
 title.Font = Enum.Font.SourceSansBold
 title.TextScaled = true
 
--- Hiệu ứng chữ xuất hiện nhanh
-local function setTitle(text)
-    title.Text = ""
-    for i = 1,#text do
-        title.Text = string.sub(text,1,i)
-        wait(0.03)
-    end
-end
+-- Thanh tab (hiển thị nhưng chưa đặt tab)
+local tabBar = Instance.new("Frame", frame)
+tabBar.Size = UDim2.new(1,-20,0,10)
+tabBar.Position = UDim2.new(0,10,0,60)
+tabBar.BackgroundColor3 = Color3.fromRGB(100,100,100)
+tabBar.BorderSizePixel = 0
 
 -- Nút đóng
 local closeBtn = Instance.new("TextButton", frame)
@@ -90,7 +57,7 @@ closeBtn.BackgroundColor3 = Color3.fromRGB(20,20,20)
 local closeCorner = Instance.new("UICorner", closeBtn)
 closeCorner.CornerRadius = UDim.new(0.3,0)
 
--- Nút ẩn/hiện
+-- Nút ẩn
 local hideBtn = Instance.new("TextButton", frame)
 hideBtn.Size = UDim2.new(0,40,0,30)
 hideBtn.Position = UDim2.new(1,-100,0,5)
@@ -98,55 +65,36 @@ hideBtn.Text = "▢"
 hideBtn.BackgroundColor3 = Color3.fromRGB(20,20,20)
 local hideCorner = Instance.new("UICorner", hideBtn)
 hideCorner.CornerRadius = UDim.new(0.3,0)
-local hiddenGuiBtn = nil
 
--- Hiệu ứng fade-out UI
-local function fadeOut()
-    for i = 0,1,0.05 do
-        frame.BackgroundTransparency = i
-        title.TextTransparency = 0.3 + i*0.7
-        wait(0.02)
-    end
-end
-
--- Hiệu ứng fade-in UI
-local function fadeIn()
-    for i = 1,0,-0.05 do
-        frame.BackgroundTransparency = i
-        title.TextTransparency = 0.3 + i*0.7
-        wait(0.02)
-    end
-end
+local hiddenFrame = nil
 
 hideBtn.MouseButton1Click:Connect(function()
     frame.Visible = false
-    -- Nút tròn hiện lại
-    hiddenGuiBtn = Instance.new("TextButton", PlayerGui)
-    hiddenGuiBtn.Size = UDim2.new(0,40,0,40)
-    hiddenGuiBtn.Position = UDim2.new(0.5,-20,0,50)
-    hiddenGuiBtn.Text = "▢"
-    hiddenGuiBtn.BackgroundColor3 = Color3.fromRGB(20,20,20)
-    local corner = Instance.new("UICorner", hiddenGuiBtn)
-    corner.CornerRadius = UDim.new(0.5,0)
-    hiddenGuiBtn.Active = true
-    hiddenGuiBtn.Draggable = true
-    hiddenGuiBtn.MouseButton1Click:Connect(function()
-        frame.Visible = true
-        fadeIn()
-        hiddenGuiBtn:Destroy()
+    -- Tạo frame nhỏ chữ nhật trong suốt, không kéo
+    hiddenFrame = Instance.new("Frame", PlayerGui)
+    hiddenFrame.Size = UDim2.new(0,100,0,30)
+    hiddenFrame.Position = UDim2.new(0.5,-50,0,50)
+    hiddenFrame.BackgroundColor3 = Color3.fromRGB(80,80,80)
+    hiddenFrame.BackgroundTransparency = 0.7
+    hiddenFrame.BorderSizePixel = 2
+    hiddenFrame.BorderColor3 = Color3.new(0,0,0)
+    local hiddenText = Instance.new("TextLabel", hiddenFrame)
+    hiddenText.Size = UDim2.new(1,0,1,0)
+    hiddenText.Text = "SCR HUB"
+    hiddenText.TextColor3 = Color3.fromRGB(0,50,150)
+    hiddenText.Font = Enum.Font.SourceSansBold
+    hiddenText.TextScaled = true
+    hiddenText.BackgroundTransparency = 1
+
+    -- Nút hiện lại UI
+    hiddenFrame.InputBegan:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseButton1 then
+            frame.Visible = true
+            hiddenFrame:Destroy()
+        end
     end)
 end)
 
 closeBtn.MouseButton1Click:Connect(function()
-    fadeOut()
     gui:Destroy()
 end)
-
--- Đặt tên script với hiệu ứng
-function name(scriptName)
-    if not scriptName or scriptName == "" then return end
-    setTitle(scriptName)
-end
-
--- Ví dụ tự động đặt tên
-name("SCR HUB")
