@@ -1,0 +1,155 @@
+--// Dịch VN → EN + Chat Roblox
+local Players = game:GetService("Players")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local TextChatService = game:GetService("TextChatService")
+local HttpService = game:GetService("HttpService")
+local LocalPlayer = Players.LocalPlayer
+local UIS = game:GetService("UserInputService")
+
+-- UI chính
+local ScreenGui = Instance.new("ScreenGui", LocalPlayer:WaitForChild("PlayerGui"))
+ScreenGui.Name = "SCR_Translator"
+
+local MainFrame = Instance.new("Frame", ScreenGui)
+MainFrame.Size = UDim2.new(0, 400, 0, 280)
+MainFrame.Position = UDim2.new(0.5, -200, 0.5, -140)
+MainFrame.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
+MainFrame.BackgroundTransparency = 0.25
+MainFrame.Active = true
+MainFrame.Draggable = true
+MainFrame.Visible = true
+MainFrame.BorderSizePixel = 0
+MainFrame.Name = "MainFrame"
+
+local TitleBar = Instance.new("Frame", MainFrame)
+TitleBar.Size = UDim2.new(1, 0, 0, 30)
+TitleBar.BackgroundColor3 = Color3.fromRGB(60, 60, 60)
+TitleBar.BorderSizePixel = 0
+TitleBar.Name = "TitleBar"
+
+local Title = Instance.new("TextLabel", TitleBar)
+Title.Size = UDim2.new(1, -60, 1, 0)
+Title.Position = UDim2.new(0, 10, 0, 0)
+Title.Text = "SCR Translator"
+Title.TextColor3 = Color3.new(1, 1, 1)
+Title.BackgroundTransparency = 1
+Title.Font = Enum.Font.SourceSansBold
+Title.TextSize = 20
+Title.TextXAlignment = Enum.TextXAlignment.Left
+
+local ToggleButton = Instance.new("TextButton", TitleBar)
+ToggleButton.Size = UDim2.new(0, 30, 1, 0)
+ToggleButton.Position = UDim2.new(1, -30, 0, 0)
+ToggleButton.Text = "-"
+ToggleButton.TextColor3 = Color3.new(1, 1, 1)
+ToggleButton.BackgroundTransparency = 1
+ToggleButton.Font = Enum.Font.SourceSansBold
+ToggleButton.TextSize = 20
+
+local InputBox = Instance.new("TextBox", MainFrame)
+InputBox.Size = UDim2.new(1, -40, 0, 80)
+InputBox.Position = UDim2.new(0, 20, 0, 50)
+InputBox.PlaceholderText = "Nhập tiếng Việt để dịch sang tiếng Anh..."
+InputBox.Text = ""
+InputBox.ClearTextOnFocus = false
+InputBox.TextWrapped = true
+InputBox.TextXAlignment = Enum.TextXAlignment.Left
+InputBox.TextYAlignment = Enum.TextYAlignment.Top
+InputBox.Font = Enum.Font.SourceSans
+InputBox.TextSize = 18
+InputBox.TextColor3 = Color3.new(1, 1, 1)
+InputBox.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+InputBox.BackgroundTransparency = 0.3
+
+local OutputLabel = Instance.new("TextLabel", MainFrame)
+OutputLabel.Size = UDim2.new(1, -40, 0, 80)
+OutputLabel.Position = UDim2.new(0, 20, 0, 140)
+OutputLabel.Text = "Kết quả sẽ hiển thị ở đây..."
+OutputLabel.TextWrapped = true
+OutputLabel.TextXAlignment = Enum.TextXAlignment.Left
+OutputLabel.TextYAlignment = Enum.TextYAlignment.Top
+OutputLabel.Font = Enum.Font.SourceSans
+OutputLabel.TextSize = 18
+OutputLabel.TextColor3 = Color3.new(1, 1, 1)
+OutputLabel.BackgroundTransparency = 1
+
+local TranslateButton = Instance.new("TextButton", MainFrame)
+TranslateButton.Size = UDim2.new(0.4, 0, 0, 35)
+TranslateButton.Position = UDim2.new(0.05, 0, 0.85, 0)
+TranslateButton.Text = "Dịch"
+TranslateButton.BackgroundColor3 = Color3.fromRGB(70, 70, 70)
+TranslateButton.TextColor3 = Color3.new(1, 1, 1)
+TranslateButton.Font = Enum.Font.SourceSansBold
+TranslateButton.TextSize = 18
+TranslateButton.AutoButtonColor = true
+
+local ChatButton = Instance.new("TextButton", MainFrame)
+ChatButton.Size = UDim2.new(0.4, 0, 0, 35)
+ChatButton.Position = UDim2.new(0.55, 0, 0.85, 0)
+ChatButton.Text = "Chat"
+ChatButton.BackgroundColor3 = Color3.fromRGB(70, 70, 70)
+ChatButton.TextColor3 = Color3.new(1, 1, 1)
+ChatButton.Font = Enum.Font.SourceSansBold
+ChatButton.TextSize = 18
+ChatButton.AutoButtonColor = true
+
+-- Ẩn/hiện UI
+local minimized = false
+ToggleButton.MouseButton1Click:Connect(function()
+	minimized = not minimized
+	for _, obj in ipairs(MainFrame:GetChildren()) do
+		if obj ~= TitleBar then obj.Visible = not minimized end
+	end
+	ToggleButton.Text = minimized and "+" or "-"
+	MainFrame.Size = minimized and UDim2.new(0, 400, 0, 30) or UDim2.new(0, 400, 0, 280)
+end)
+
+-- Hàm gửi tin nhắn
+local function sendChat(msg)
+	local ok = false
+
+	-- Chat mới
+	local success = pcall(function()
+		if TextChatService.ChatVersion == Enum.ChatVersion.TextChatService then
+			local ch = TextChatService:FindFirstChild("TextChannels") and TextChatService.TextChannels:FindFirstChild("RBXGeneral")
+			if ch then ch:SendAsync(msg) ok = true end
+		end
+	end)
+
+	-- Chat cũ
+	if not ok then
+		local event = ReplicatedStorage:FindFirstChild("DefaultChatSystemChatEvents")
+		if event and event:FindFirstChild("SayMessageRequest") then
+			event.SayMessageRequest:FireServer(msg, "All")
+			ok = true
+		end
+	end
+
+	if ok then print("✅ Chat sent:", msg) else warn("⚠️ Gửi chat thất bại") end
+end
+
+-- Hàm dịch
+TranslateButton.MouseButton1Click:Connect(function()
+	local input = InputBox.Text
+	if input == "" then return end
+
+	local success, result = pcall(function()
+		local response = game:HttpGet("https://translate.googleapis.com/translate_a/single?client=gtx&sl=vi&tl=en&dt=t&q=" .. HttpService:UrlEncode(input))
+		return response
+	end)
+
+	if success then
+		local translated = string.match(result, "%[\"(.-)\",")
+		OutputLabel.Text = translated or "Không dịch được."
+	else
+		OutputLabel.Text = "Lỗi dịch!"
+	end
+end)
+
+-- Nút Chat
+ChatButton.MouseButton1Click:Connect(function()
+	local text = OutputLabel.Text
+	if text and text ~= "" and text ~= "Kết quả sẽ hiển thị ở đây..." then
+		sendChat(text)
+	end
+end)
