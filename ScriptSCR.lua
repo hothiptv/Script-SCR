@@ -1,4 +1,4 @@
---// SCR HUB - Framework (bản test)
+--// SCR HUB - Framework (bản test) 111
 local scr = {}
 local Tabs = {}
 
@@ -122,6 +122,24 @@ function scr.createWindow(title, config)
 			Btn.MouseButton1Click:Connect(callback)
 		end
 	end
+
+	--// ✅ Nút ẩn/hiện UI
+	local ToggleButton = Instance.new("TextButton")
+	ToggleButton.Parent = ScreenGui
+	ToggleButton.Size = UDim2.new(0, 100, 0, 40)
+	ToggleButton.Position = UDim2.new(0, 20, 0.5, -20)
+	ToggleButton.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+	ToggleButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+	ToggleButton.Text = "Ẩn/Hiện UI"
+	ToggleButton.TextScaled = true
+	ToggleButton.AutoButtonColor = true
+	ToggleButton.Visible = true
+
+	local uiVisible = true
+	ToggleButton.MouseButton1Click:Connect(function()
+		uiVisible = not uiVisible
+		Main.Visible = uiVisible
+	end)
 
 	return Tabs
 end
