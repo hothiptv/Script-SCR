@@ -1,179 +1,129 @@
--- LocalScript SCR HUB
-local Player = game.Players.LocalPlayer
-local PlayerGui = Player:WaitForChild("PlayerGui")
+--// SCR HUB - Framework (bản test)
+local scr = {}
+local Tabs = {}
 
-local SCR = {}
-SCR.tabs = {}
+-- Tạo UI chính
+function scr.createWindow(title, config)
+	local ScreenGui = Instance.new("ScreenGui", game:GetService("CoreGui"))
+	ScreenGui.Name = "SCR_HUB"
 
--- ==== Chức năng đặt tên script ==== 
-function name(scriptName)
-    SCR.scriptName = scriptName
+	-- Hiệu ứng load
+	local LoadingFrame = Instance.new("Frame", ScreenGui)
+	LoadingFrame.Size = UDim2.new(1,0,1,0)
+	LoadingFrame.BackgroundColor3 = Color3.fromRGB(0,0,0)
+	LoadingFrame.BackgroundTransparency = 0
+	local Title = Instance.new("TextLabel", LoadingFrame)
+	Title.Size = UDim2.new(1,0,1,0)
+	Title.Text = "SCR HUB"
+	Title.TextColor3 = Color3.fromRGB(255,255,255)
+	Title.TextScaled = true
+	Title.Font = Enum.Font.GothamBold
+
+	task.spawn(function()
+		for i=0,1,0.05 do
+			task.wait(0.05)
+			LoadingFrame.BackgroundTransparency = i
+			Title.TextTransparency = i
+		end
+		LoadingFrame:Destroy()
+	end)
+
+	-- UI chính
+	local Main = Instance.new("Frame", ScreenGui)
+	Main.BackgroundColor3 = Color3.fromRGB(60,60,60)
+	Main.BackgroundTransparency = 0.3
+	Main.Size = UDim2.new(0.5, 0, 0.6, 0)
+	Main.Position = UDim2.new(0.25,0,0.2,0)
+	Main.Visible = true
+	Main.Name = "MainUI"
+	Main.Active = true
+	Main.Draggable = true
+
+	-- Thanh trên (Title + Hide)
+	local TopBar = Instance.new("Frame", Main)
+	TopBar.Size = UDim2.new(1,0,0,30)
+	TopBar.BackgroundColor3 = Color3.fromRGB(45,45,45)
+	local TitleText = Instance.new("TextLabel", TopBar)
+	TitleText.Text = title or "SCR HUB"
+	TitleText.Size = UDim2.new(1,-40,1,0)
+	TitleText.TextColor3 = Color3.new(1,1,1)
+	TitleText.BackgroundTransparency = 1
+	TitleText.Font = Enum.Font.GothamBold
+	TitleText.TextSize = 16
+	local HideBtn = Instance.new("TextButton", TopBar)
+	HideBtn.Text = "-"
+	HideBtn.Size = UDim2.new(0,30,1,0)
+	HideBtn.Position = UDim2.new(1,-30,0,0)
+	HideBtn.BackgroundColor3 = Color3.fromRGB(80,80,80)
+	HideBtn.TextColor3 = Color3.new(1,1,1)
+
+	HideBtn.MouseButton1Click:Connect(function()
+		Main.Visible = not Main.Visible
+	end)
+
+	-- Thanh tab trái
+	local TabBar = Instance.new("ScrollingFrame", Main)
+	TabBar.Size = UDim2.new(0,120,1,-30)
+	TabBar.Position = UDim2.new(0,0,0,30)
+	TabBar.BackgroundColor3 = Color3.fromRGB(50,50,50)
+	TabBar.ScrollBarThickness = 4
+	TabBar.CanvasSize = UDim2.new(0,0,0,0)
+
+	function Tabs.CreateTab(name, id, order)
+		local TabBtn = Instance.new("TextButton", TabBar)
+		TabBtn.Text = name
+		TabBtn.Size = UDim2.new(1,0,0,30)
+		TabBtn.BackgroundColor3 = Color3.fromRGB(80,80,80)
+		TabBtn.TextColor3 = Color3.new(1,1,1)
+		TabBtn.LayoutOrder = order or 1
+
+		local TabFrame = Instance.new("Frame", Main)
+		TabFrame.Size = UDim2.new(1,-120,1,-30)
+		TabFrame.Position = UDim2.new(0,120,0,30)
+		TabFrame.BackgroundTransparency = 1
+		TabFrame.Visible = false
+
+		TabBtn.MouseButton1Click:Connect(function()
+			for _,v in pairs(Main:GetChildren()) do
+				if v:IsA("Frame") and v ~= TopBar and v ~= TabBar then
+					v.Visible = false
+				end
+			end
+			TabFrame.Visible = true
+		end)
+
+		-- Khung con
+		function Tabs.CreateKhung(name, tabId, index)
+			if tabId ~= id then return end
+			local Khung = Instance.new("Frame", TabFrame)
+			Khung.Size = UDim2.new(0.9,0,0,100)
+			Khung.Position = UDim2.new(0.05,0,0,(index-1)*110)
+			Khung.BackgroundColor3 = Color3.fromRGB(70,70,70)
+			local Title = Instance.new("TextLabel", Khung)
+			Title.Size = UDim2.new(1,0,0,25)
+			Title.Text = name
+			Title.BackgroundTransparency = 1
+			Title.TextColor3 = Color3.new(1,1,1)
+			Title.Font = Enum.Font.GothamBold
+			Title.TextSize = 14
+			return Khung
+		end
+
+		function Tabs.CreateButton(name, tabId, khungIndex, callback)
+			if tabId ~= id then return end
+			local Khung = TabFrame:FindFirstChildWhichIsA("Frame")
+			if not Khung then return end
+			local Btn = Instance.new("TextButton", Khung)
+			Btn.Text = name
+			Btn.Size = UDim2.new(0.8,0,0,25)
+			Btn.Position = UDim2.new(0.1,0,0.3*khungIndex,0)
+			Btn.BackgroundColor3 = Color3.fromRGB(100,100,100)
+			Btn.TextColor3 = Color3.new(1,1,1)
+			Btn.MouseButton1Click:Connect(callback)
+		end
+	end
+
+	return Tabs
 end
 
--- ==== Tạo tab ====
-function tab(varName, tabName)
-    local t = {var = varName, name = tabName, buttons={}, toggles={}, textboxes={}}
-    table.insert(SCR.tabs, t)
-    return t
-end
-
-function button(tabVar, btnName, callback)
-    for _,t in pairs(SCR.tabs) do
-        if t.var == tabVar then
-            table.insert(t.buttons,{name=btnName,callback=callback})
-        end
-    end
-end
-
-function toggle(tabVar, toggleName, callback)
-    for _,t in pairs(SCR.tabs) do
-        if t.var == tabVar then
-            table.insert(t.toggles,{name=toggleName,callback=callback,state=false})
-        end
-    end
-end
-
-function textbox(tabVar, boxName, saveVar, callback)
-    for _,t in pairs(SCR.tabs) do
-        if t.var == tabVar then
-            table.insert(t.textboxes,{name=boxName,save=saveVar,callback=callback})
-        end
-    end
-end
-
--- ==== Hiệu ứng intro + UI chính ====
-function text(titleText)
-    -- Tạo UI intro
-    local splash = Instance.new("ScreenGui", PlayerGui)
-    local introFrame = Instance.new("Frame", splash)
-    introFrame.Size = UDim2.new(0,200,0,60)
-    introFrame.Position = UDim2.new(0.5,-100,0.5,-30)
-    introFrame.BackgroundColor3 = Color3.fromRGB(40,40,40)
-    introFrame.BorderSizePixel = 2
-    introFrame.BorderColor3 = Color3.new(0,0,0)
-    introFrame.BackgroundTransparency = 0.5
-
-    local introLabel = Instance.new("TextLabel", introFrame)
-    introLabel.Size = UDim2.new(1,0,1,0)
-    introLabel.BackgroundTransparency = 1
-    introLabel.TextColor3 = Color3.fromRGB(0,200,255)
-    introLabel.Font = Enum.Font.SourceSansBold
-    introLabel.TextScaled = true
-    introLabel.Text = ""
-
-    -- Chạy hiệu ứng gõ chữ
-    for i=1,#titleText do
-        introLabel.Text = string.sub(titleText,1,i)
-        wait(0.05)
-    end
-
-    wait(1)
-
-    -- Xóa toàn bộ UI intro
-    splash:Destroy()
-
-    -- Tạo UI chính
-    local mainGui = Instance.new("ScreenGui", PlayerGui)
-    local mainFrame = Instance.new("Frame", mainGui)
-    mainFrame.Size = UDim2.new(0,0,0,0)
-    mainFrame.Position = UDim2.new(0.5,0,0.5,0)
-    mainFrame.BackgroundColor3 = Color3.fromRGB(80,80,80)
-    mainFrame.BorderSizePixel = 2
-    mainFrame.BorderColor3 = Color3.new(0,0,0)
-    mainFrame.BackgroundTransparency = 0.3
-
-    -- Phóng to UI chính
-    for i=0,1,0.05 do
-        mainFrame.Size = UDim2.new(0,500*i,0,350*i)
-        mainFrame.Position = UDim2.new(0.5,-250*i,0.5,-175*i)
-        wait(0.03)
-    end
-
-    -- Thanh trên
-    local topBar = Instance.new("Frame", mainFrame)
-    topBar.Size = UDim2.new(1,0,0,50)
-    topBar.Position = UDim2.new(0,0,0,0)
-    topBar.BackgroundColor3 = Color3.fromRGB(100,100,100)
-    topBar.BorderSizePixel = 0
-
-    local titleLbl = Instance.new("TextLabel", topBar)
-    titleLbl.Size = UDim2.new(0.7,0,0.5,0)
-    titleLbl.Position = UDim2.new(0,10,0,0)
-    titleLbl.Text = SCR.scriptName or "SCR HUB"
-    titleLbl.TextColor3 = Color3.fromRGB(0,0,150)
-    titleLbl.TextScaled = true
-    titleLbl.Font = Enum.Font.SourceSansBold
-    titleLbl.BackgroundTransparency = 1
-
-    local author = Instance.new("TextLabel", topBar)
-    author.Size = UDim2.new(0.7,0,0.5,0)
-    author.Position = UDim2.new(0,10,0,25)
-    author.Text = "NGUYỄN TRỌNG AN"
-    author.TextColor3 = Color3.fromRGB(0,0,0)
-    author.TextScaled = true
-    author.Font = Enum.Font.SourceSansItalic
-    author.BackgroundTransparency = 1
-
-    -- Nút đóng
-    local closeBtn = Instance.new("TextButton", topBar)
-    closeBtn.Size = UDim2.new(0,30,0,30)
-    closeBtn.Position = UDim2.new(1,-35,0,10)
-    closeBtn.Text = "X"
-    closeBtn.BackgroundColor3 = Color3.fromRGB(0,0,0)
-    closeBtn.TextColor3 = Color3.fromRGB(255,255,255)
-    closeBtn.BorderSizePixel = 0
-    closeBtn.MouseButton1Click:Connect(function()
-        mainGui:Destroy()
-    end)
-
-    -- Nút ẩn
-    local hideBtn = Instance.new("TextButton", topBar)
-    hideBtn.Size = UDim2.new(0,30,0,30)
-    hideBtn.Position = UDim2.new(1,-70,0,10)
-    hideBtn.Text = "_"
-    hideBtn.BackgroundColor3 = Color3.fromRGB(0,0,0)
-    hideBtn.TextColor3 = Color3.fromRGB(255,255,255)
-    hideBtn.BorderSizePixel = 0
-    hideBtn.MouseButton1Click:Connect(function()
-        mainFrame.Visible = false
-        local hiddenBtn = Instance.new("TextButton", mainGui)
-        hiddenBtn.Size = UDim2.new(0,50,0,30)
-        hiddenBtn.Position = UDim2.new(0.5,-25,0,50)
-        hiddenBtn.Text = "SCR"
-        hiddenBtn.BackgroundColor3 = Color3.fromRGB(0,0,0)
-        hiddenBtn.TextColor3 = Color3.fromRGB(255,255,255)
-        hiddenBtn.BorderSizePixel = 0
-        hiddenBtn.MouseButton1Click:Connect(function()
-            mainFrame.Visible = true
-            hiddenBtn:Destroy()
-        end)
-    end)
-
-    -- Tab thanh dưới
-    local tabBar = Instance.new("Frame", mainFrame)
-    tabBar.Size = UDim2.new(1,0,0,40)
-    tabBar.Position = UDim2.new(0,0,1,-40)
-    tabBar.BackgroundColor3 = Color3.fromRGB(70,70,70)
-    tabBar.BorderSizePixel = 0
-
-    -- Tạo nút tab
-    for i,t in pairs(SCR.tabs) do
-        local tabBtn = Instance.new("TextButton", tabBar)
-        tabBtn.Size = UDim2.new(0,90,0,30)
-        tabBtn.Position = UDim2.new(0,10+(i-1)*100,0,5)
-        tabBtn.Text = t.name
-        tabBtn.BackgroundColor3 = Color3.fromRGB(120,120,120)
-        tabBtn.TextColor3 = Color3.fromRGB(255,255,255)
-        tabBtn.BorderSizePixel = 0
-    end
-end
-
-return {
-    SCR = SCR,
-    name = name,
-    tab = tab,
-    button = button,
-    toggle = toggle,
-    textbox = textbox,
-    text = text
-}
+return scr
