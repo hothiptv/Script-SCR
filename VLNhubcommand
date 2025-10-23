@@ -1,0 +1,173 @@
+--// VLN Hub Command Framework v2.0
+--// by Nguyễn Trọng An
+
+local Players = game:GetService("Players")
+local TweenService = game:GetService("TweenService")
+local player = Players.LocalPlayer
+local Cmd = {}
+Cmd.Commands = {}
+
+--// UI chính
+local ScreenGui = Instance.new("ScreenGui", player:WaitForChild("PlayerGui"))
+ScreenGui.Name = "VLN_Command_UI"
+ScreenGui.ResetOnSpawn = false
+
+local Frame = Instance.new("Frame", ScreenGui)
+Frame.Size = UDim2.new(0, 400, 0, 260)
+Frame.Position = UDim2.new(0.5, -200, 0.5, -130)
+Frame.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
+Frame.BorderSizePixel = 0
+Frame.Visible = true
+
+local UICorner = Instance.new("UICorner", Frame)
+UICorner.CornerRadius = UDim.new(0, 8)
+
+local Title = Instance.new("TextLabel", Frame)
+Title.Size = UDim2.new(1, 0, 0, 40)
+Title.BackgroundColor3 = Color3.fromRGB(35, 35, 35)
+Title.Text = "VLN Hub Command Framework"
+Title.Font = Enum.Font.Code
+Title.TextSize = 20
+Title.TextColor3 = Color3.fromRGB(255, 255, 255)
+Title.BorderSizePixel = 0
+
+-- Nút ẩn/hiện UI
+local Toggle = Instance.new("TextButton", ScreenGui)
+Toggle.Size = UDim2.new(0, 40, 0, 40)
+Toggle.Position = UDim2.new(0, 20, 0.5, -20)
+Toggle.Text = "≡"
+Toggle.Font = Enum.Font.Code
+Toggle.TextSize = 22
+Toggle.TextColor3 = Color3.fromRGB(255, 255, 255)
+Toggle.BackgroundColor3 = Frame.BackgroundColor3
+Toggle.BorderSizePixel = 0
+Instance.new("UICorner", Toggle).CornerRadius = UDim.new(1, 0)
+
+Toggle.MouseButton1Click:Connect(function()
+	local goal = Frame.Visible and UDim2.new(0.5, -200, 0.5, -130) or UDim2.new(0.5, -200, 0.5, -130)
+	Frame.Visible = not Frame.Visible
+	if Frame.Visible then
+		TweenService:Create(Frame, TweenInfo.new(0.4, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {Size = UDim2.new(0, 400, 0, 260)}):Play()
+	else
+		TweenService:Create(Frame, TweenInfo.new(0.4, Enum.EasingStyle.Quad, Enum.EasingDirection.In), {Size = UDim2.new(0, 0, 0, 0)}):Play()
+		task.wait(0.4)
+		Frame.Visible = false
+	end
+end)
+
+-- Nút xóa UI
+local Close = Instance.new("TextButton", Frame)
+Close.Size = UDim2.new(0, 40, 0, 40)
+Close.Position = UDim2.new(1, -45, 0, 5)
+Close.Text = "✖"
+Close.Font = Enum.Font.Code
+Close.TextSize = 18
+Close.TextColor3 = Color3.fromRGB(255, 80, 80)
+Close.BackgroundTransparency = 1
+
+Close.MouseButton1Click:Connect(function()
+	ScreenGui:Destroy()
+end)
+
+-- TextBox
+local Input = Instance.new("TextBox", Frame)
+Input.Size = UDim2.new(1, -20, 0, 40)
+Input.Position = UDim2.new(0, 10, 0, 60)
+Input.PlaceholderText = "Nhập lệnh (vd: speed 10 / speed on / speed un)"
+Input.Font = Enum.Font.Code
+Input.TextSize = 18
+Input.TextColor3 = Color3.fromRGB(255, 255, 255)
+Input.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+Input.BorderSizePixel = 0
+Instance.new("UICorner", Input).CornerRadius = UDim.new(0, 6)
+
+-- Nút xác nhận
+local Confirm = Instance.new("TextButton", Frame)
+Confirm.Size = UDim2.new(0, 120, 0, 40)
+Confirm.Position = UDim2.new(0.5, -60, 0, 115)
+Confirm.Text = "Xác nhận"
+Confirm.Font = Enum.Font.Code
+Confirm.TextSize = 18
+Confirm.TextColor3 = Color3.fromRGB(255,255,255)
+Confirm.BackgroundColor3 = Color3.fromRGB(40, 100, 255)
+Instance.new("UICorner", Confirm).CornerRadius = UDim.new(0, 6)
+
+--// Hệ thống thông báo (hiệu ứng trượt + tiến trình)
+local function Notify(msg, color)
+	local note = Instance.new("Frame", ScreenGui)
+	note.Size = UDim2.new(0, 280, 0, 50)
+	note.Position = UDim2.new(1, 10, 0, 20)
+	note.BackgroundColor3 = Color3.fromRGB(35, 35, 35)
+	note.BorderSizePixel = 0
+	Instance.new("UICorner", note).CornerRadius = UDim.new(0, 6)
+
+	local label = Instance.new("TextLabel", note)
+	label.Size = UDim2.new(1, -10, 1, 0)
+	label.Position = UDim2.new(0, 10, 0, 0)
+	label.Font = Enum.Font.Code
+	label.TextSize = 18
+	label.TextColor3 = color or Color3.fromRGB(255, 255, 255)
+	label.TextXAlignment = Enum.TextXAlignment.Left
+	label.BackgroundTransparency = 1
+	label.Text = msg
+
+	local bar = Instance.new("Frame", note)
+	bar.Size = UDim2.new(1, 0, 0, 4)
+	bar.Position = UDim2.new(0, 0, 1, -4)
+	bar.BackgroundColor3 = Color3.fromRGB(40, 100, 255)
+	bar.BorderSizePixel = 0
+
+	TweenService:Create(note, TweenInfo.new(0.5, Enum.EasingStyle.Quad), {Position = UDim2.new(1, -300, 0, 20)}):Play()
+
+	TweenService:Create(bar, TweenInfo.new(5, Enum.EasingStyle.Linear), {Size = UDim2.new(0, 0, 0, 4)}):Play()
+
+	task.wait(5)
+	TweenService:Create(note, TweenInfo.new(0.5, Enum.EasingStyle.Quad), {Position = UDim2.new(1, 10, 0, 20)}):Play()
+	task.wait(0.5)
+	note:Destroy()
+end
+
+--// Command API
+function Cmd:CreateCmd(name, callback)
+	Cmd.Commands[name] = callback
+end
+
+local function ExecuteCmd(text)
+	local args = string.split(text, " ")
+	local cmd = string.lower(args[1] or "")
+	local param = args[2]
+
+	if Cmd.Commands[cmd] then
+		Cmd.Commands[cmd](param)
+	else
+		Notify("⚠️ Lệnh không tồn tại: " .. cmd, Color3.fromRGB(255, 200, 0))
+	end
+end
+
+Confirm.MouseButton1Click:Connect(function()
+	if Input.Text ~= "" then
+		ExecuteCmd(Input.Text)
+		Input.Text = ""
+	end
+end)
+
+--// Lệnh mẫu: Speed
+Cmd:CreateCmd("speed", function(arg)
+	local hum = player.Character and player.Character:FindFirstChildOfClass("Humanoid")
+	if not hum then return Notify("❌ Không tìm thấy Humanoid!", Color3.fromRGB(255,100,100)) end
+
+	if tonumber(arg) then
+		hum.WalkSpeed = tonumber(arg) * 10
+		Notify("✅ Speed đặt thành "..hum.WalkSpeed, Color3.fromRGB(100,255,100))
+	elseif arg == "on" then
+		hum.WalkSpeed = 100
+		Notify("✅ Speed bật (100)", Color3.fromRGB(100,255,100))
+	elseif arg == "off" or arg == "un" then
+		hum.WalkSpeed = 16
+		Notify("♻️ Reset speed (16)", Color3.fromRGB(255,255,100))
+	else
+		Notify("⚠️ Tham số không hợp lệ!", Color3.fromRGB(255,200,0))
+	end
+end)
+
+Notify("🎉 VLN Hub Command Framework Loaded!", Color3.fromRGB(100,255,100))
