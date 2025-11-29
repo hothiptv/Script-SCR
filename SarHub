@@ -1,1 +1,372 @@
+-- ==================================================
+-- Nonnas Rayfield/Fluet Style UI + Notifications + Elements
+-- Version 3.0
+-- ==================================================
 
+local Players = game:GetService("Players")
+local LocalPlayer = Players.LocalPlayer
+local TweenService = game:GetService("TweenService")
+local RunService = game:GetService("RunService")
+local UserInputService = game:GetService("UserInputService")
+
+local API = {}
+API.__index = API
+
+-------------------------------
+-- Drag utility
+-------------------------------
+local function dragify(Frame)
+    local dragging, dragInput, dragStart, startPos
+    Frame.InputBegan:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseButton1 then
+            dragging = true
+            dragStart = input.Position
+            startPos = Frame.Position
+            input.Changed:Connect(function()
+                if input.UserInputState == Enum.UserInputState.End then
+                    dragging = false
+                end
+            end)
+        end
+    end)
+    Frame.InputChanged:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseMovement then
+            dragInput = input
+        end
+    end)
+    RunService.RenderStepped:Connect(function()
+        if dragging and dragInput then
+            local delta = dragInput.Position - dragStart
+            Frame.Position = UDim2.new(
+                startPos.X.Scale, startPos.X.Offset + delta.X,
+                startPos.Y.Scale, startPos.Y.Offset + delta.Y
+            )
+        end
+    end)
+end
+
+-------------------------------
+-- Create Window
+-------------------------------
+function API:CreateWindow(title)
+    local self = setmetatable({}, API)
+
+    local Screen = Instance.new("ScreenGui")
+    Screen.Name = title or "UI_Window"
+    Screen.ResetOnSpawn = false
+    Screen.Parent = LocalPlayer:WaitForChild("PlayerGui")
+
+    local Main = Instance.new("Frame")
+    Main.Size = UDim2.new(0,480,0,400)
+    Main.Position = UDim2.new(0.5,-240,0.5,-200)
+    Main.BackgroundColor3 = Color3.fromRGB(25,25,25)
+    Main.BackgroundTransparency = 0.4
+    Main.BorderSizePixel = 0
+    Main.Parent = Screen
+    dragify(Main)
+
+    local TitleLabel = Instance.new("TextLabel")
+    TitleLabel.Size = UDim2.new(1,0,0,40)
+    TitleLabel.BackgroundTransparency = 1
+    TitleLabel.Text = title or "Rayfield UI"
+    TitleLabel.Font = Enum.Font.GothamBold
+    TitleLabel.TextSize = 20
+    TitleLabel.TextColor3 = Color3.fromRGB(255,255,255)
+    TitleLabel.Parent = Main
+
+    local ToggleBtn = Instance.new("TextButton")
+    ToggleBtn.Size = UDim2.new(0,30,0,30)
+    ToggleBtn.Position = UDim2.new(0,0,0,0)
+    ToggleBtn.Text = "≡"
+    ToggleBtn.Font = Enum.Font.GothamBold
+    ToggleBtn.TextSize = 18
+    ToggleBtn.TextColor3 = Color3.new(1,1,1)
+    ToggleBtn.BackgroundColor3 = Color3.fromRGB(40,40,40)
+    ToggleBtn.Parent = Screen
+
+    local visible = true
+    ToggleBtn.MouseButton1Click:Connect(function()
+        visible = not visible
+        Main.Visible = visible
+    end)
+
+    local TabList = Instance.new("Frame")
+    TabList.Size = UDim2.new(0,140,1,-40)
+    TabList.Position = UDim2.new(0,0,0,40)
+    TabList.BackgroundTransparency = 0.4
+    TabList.BackgroundColor3 = Color3.fromRGB(40,40,40)
+    TabList.Parent = Main
+
+    local ListLayout = Instance.new("UIListLayout")
+    ListLayout.Parent = TabList
+    ListLayout.Padding = UDim.new(0,5)
+
+    local Pages = Instance.new("Frame")
+    Pages.Size = UDim2.new(1,-140,1,-40)
+    Pages.Position = UDim2.new(0,140,0,40)
+    Pages.BackgroundTransparency = 1
+    Pages.Parent = Main
+
+    self.Main = Main
+    self.Pages = Pages
+    self.TabList = TabList
+    self.Tabs = {}
+    self.Screen = Screen
+    self.NotificationY = 10
+    self.Notifications = {}
+
+    return self
+end
+
+-------------------------------
+-- Create Tab
+-------------------------------
+function API:CreateTab(name)
+    local Page = Instance.new("ScrollingFrame")
+    Page.Size = UDim2.new(1,0,1,0)
+    Page.CanvasSize = UDim2.new(0,0,0,0)
+    Page.ScrollBarThickness = 6
+    Page.Visible = false
+    Page.Parent = self.Pages
+
+    local Layout = Instance.new("UIListLayout")
+    Layout.Parent = Page
+    Layout.Padding = UDim.new(0,5)
+
+    local Btn = Instance.new("TextButton")
+    Btn.Size = UDim2.new(1,-10,0,36)
+    Btn.BackgroundColor3 = Color3.fromRGB(40,40,40)
+    Btn.Text = name
+    Btn.Font = Enum.Font.Gotham
+    Btn.TextSize = 16
+    Btn.TextColor3 = Color3.new(1,1,1)
+    Btn.Parent = self.TabList
+
+    Btn.MouseButton1Click:Connect(function()
+        for _, tab in pairs(self.Tabs) do
+            tab.Page.Visible = false
+        end
+        Page.Visible = true
+    end)
+
+    local Tab = { Page = Page }
+    table.insert(self.Tabs, Tab)
+
+    -----------------------
+    -- Add Elements
+    -----------------------
+    function Tab:AddButton(text, callback)
+        local B = Instance.new("TextButton")
+        B.Size = UDim2.new(1,-10,0,36)
+        B.BackgroundColor3 = Color3.fromRGB(50,50,50)
+        B.Text = text
+        B.Font = Enum.Font.Gotham
+        B.TextSize = 15
+        B.TextColor3 = Color3.new(1,1,1)
+        B.Parent = Page
+        B.MouseButton1Click:Connect(function()
+            pcall(callback)
+        end)
+    end
+
+    function Tab:AddToggle(text, default, callback)
+        local F = Instance.new("Frame")
+        F.Size = UDim2.new(1,-10,0,36)
+        F.BackgroundColor3 = Color3.fromRGB(50,50,50)
+        F.Parent = Page
+
+        local L = Instance.new("TextLabel")
+        L.Size = UDim2.new(0.7,0,1,0)
+        L.BackgroundTransparency = 1
+        L.Font = Enum.Font.Gotham
+        L.TextSize = 15
+        L.TextColor3 = Color3.new(1,1,1)
+        L.Text = text
+        L.Parent = F
+
+        local T = Instance.new("TextButton")
+        T.Size = UDim2.new(0.25,0,0.75,0)
+        T.Position = UDim2.new(0.72,0,0.12,0)
+        T.Text = default and "ON" or "OFF"
+        T.BackgroundColor3 = default and Color3.fromRGB(0,170,0) or Color3.fromRGB(170,0,0)
+        T.Parent = F
+
+        local state = default
+        T.MouseButton1Click:Connect(function()
+            state = not state
+            T.Text = state and "ON" or "OFF"
+            T.BackgroundColor3 = state and Color3.fromRGB(0,170,0) or Color3.fromRGB(170,0,0)
+            pcall(callback, state)
+        end)
+    end
+
+    function Tab:AddSlider(text, min, max, default, callback)
+        local Frame = Instance.new("Frame")
+        Frame.Size = UDim2.new(1,-10,0,50)
+        Frame.BackgroundColor3 = Color3.fromRGB(50,50,50)
+        Frame.Parent = Page
+
+        local Label = Instance.new("TextLabel")
+        Label.Size = UDim2.new(1,0,0,20)
+        Label.BackgroundTransparency = 1
+        Label.Text = text..": "..default
+        Label.Font = Enum.Font.Gotham
+        Label.TextSize = 15
+        Label.TextColor3 = Color3.new(1,1,1)
+        Label.Parent = Frame
+
+        local Bar = Instance.new("Frame")
+        Bar.Size = UDim2.new(1,-20,0,10)
+        Bar.Position = UDim2.new(0,10,0,30)
+        Bar.BackgroundColor3 = Color3.fromRGB(80,80,80)
+        Bar.Parent = Frame
+
+        local Fill = Instance.new("Frame")
+        Fill.Size = UDim2.new((default-min)/(max-min),0,1,0)
+        Fill.BackgroundColor3 = Color3.fromRGB(0,170,255)
+        Fill.Parent = Bar
+
+        Bar.InputBegan:Connect(function(input)
+            if input.UserInputType == Enum.UserInputType.MouseButton1 then
+                local move, release
+                move = UserInputService.InputChanged:Connect(function(i)
+                    if i.UserInputType==Enum.UserInputType.MouseMovement then
+                        local rel = math.clamp((i.Position.X - Bar.AbsolutePosition.X)/Bar.AbsoluteSize.X,0,1)
+                        Fill.Size = UDim2.new(rel,0,1,0)
+                        local val = math.floor(min+(max-min)*rel)
+                        Label.Text = text..": "..val
+                        pcall(callback,val)
+                    end
+                end)
+                release = UserInputService.InputEnded:Connect(function(i)
+                    if i.UserInputType==Enum.UserInputType.MouseButton1 then
+                        move:Disconnect()
+                        release:Disconnect()
+                    end
+                end)
+            end
+        end)
+    end
+
+    function Tab:AddTextbox(text, placeholder, callback)
+        local Box = Instance.new("TextBox")
+        Box.Size = UDim2.new(1,-10,0,36)
+        Box.BackgroundColor3 = Color3.fromRGB(50,50,50)
+        Box.Text = ""
+        Box.PlaceholderText = placeholder
+        Box.Font = Enum.Font.Gotham
+        Box.TextSize = 14
+        Box.TextColor3 = Color3.new(1,1,1)
+        Box.Parent = Page
+        Box.FocusLost:Connect(function(enter)
+            if enter then pcall(callback, Box.Text) end
+        end)
+    end
+
+    function Tab:AddDropdown(text, list, callback)
+        local Btn = Instance.new("TextButton")
+        Btn.Size = UDim2.new(1,-10,0,36)
+        Btn.BackgroundColor3 = Color3.fromRGB(50,50,50)
+        Btn.Text = text.." ▼"
+        Btn.Font = Enum.Font.Gotham
+        Btn.TextSize = 15
+        Btn.TextColor3 = Color3.new(1,1,1)
+        Btn.Parent = Page
+
+        local Open=false
+        Btn.MouseButton1Click:Connect(function()
+            if Open then
+                for _,c in pairs(Page:GetChildren()) do if c.Name==text.."_opt" then c:Destroy() end end
+                Open=false
+                return
+            end
+            Open=true
+            for i,opt in ipairs(list) do
+                local O=Instance.new("TextButton")
+                O.Name=text.."_opt"
+                O.Size=UDim2.new(1,-10,0,32)
+                O.Position=UDim2.new(0,0,0,(i-1)*32)
+                O.BackgroundColor3=Color3.fromRGB(70,70,70)
+                O.Text=opt
+                O.Font=Enum.Font.Gotham
+                O.TextSize=14
+                O.TextColor3=Color3.new(1,1,1)
+                O.Parent=Page
+                O.MouseButton1Click:Connect(function()
+                    Btn.Text=text..": "..opt
+                    for _,c in pairs(Page:GetChildren()) do if c.Name==text.."_opt" then c:Destroy() end end
+                    Open=false
+                    pcall(callback,opt)
+                end)
+            end
+        end)
+    end
+
+    function Tab:AddLabel(text)
+        local L=Instance.new("TextLabel")
+        L.Size=UDim2.new(1,-10,0,30)
+        L.BackgroundTransparency=1
+        L.Font=Enum.Font.Gotham
+        L.TextSize=15
+        L.TextColor3=Color3.new(1,1,1)
+        L.Text=text
+        L.Parent=Page
+    end
+
+    return Tab
+end
+
+-------------------------------
+-- Notification
+-------------------------------
+function API:Notify(text)
+    local notif=Instance.new("Frame")
+    notif.Size=UDim2.new(0,300,0,50)
+    notif.Position=UDim2.new(1,10,0,self.NotificationY)
+    notif.BackgroundColor3=Color3.fromRGB(30,30,30)
+    notif.BorderSizePixel=0
+    notif.AnchorPoint=Vector2.new(1,0)
+    notif.Parent=self.Screen
+
+    local Label=Instance.new("TextLabel")
+    Label.Size=UDim2.new(1,0,1,0)
+    Label.BackgroundTransparency=1
+    Label.Text=text
+    Label.Font=Enum.Font.Gotham
+    Label.TextSize=16
+    Label.TextColor3=Color3.fromRGB(255,255,255)
+    Label.TextXAlignment=Enum.TextXAlignment.Left
+    Label.Parent=notif
+
+    local Bar=Instance.new("Frame")
+    Bar.Size=UDim2.new(1,0,0,5)
+    Bar.Position=UDim2.new(0,0,1,-5)
+    Bar.BackgroundColor3=Color3.fromRGB(0,170,255)
+    Bar.Parent=notif
+
+    table.insert(self.Notifications,notif)
+    self.NotificationY=self.NotificationY+60
+
+    TweenService:Create(notif,TweenInfo.new(0.5),{Position=UDim2.new(1,-10,0,self.NotificationY-60)}):Play()
+
+    spawn(function()
+        local duration=5
+        local startTime=tick()
+        local conn
+        conn=RunService.RenderStepped:Connect(function()
+            local elapsed=tick()-startTime
+            Bar.Size=UDim2.new(math.clamp(1-elapsed/duration,0,1),0,0,5)
+        end)
+        wait(duration)
+        conn:Disconnect()
+        TweenService:Create(notif,TweenInfo.new(0.5),{Position=UDim2.new(1,310,0,notif.Position.Y.Offset)}):Play()
+        wait(0.5)
+        notif:Destroy()
+        table.remove(self.Notifications,1)
+        self.NotificationY=self.NotificationY-60
+    end)
+end
+
+-------------------------------
+-- DEMO
+-------------------------------
