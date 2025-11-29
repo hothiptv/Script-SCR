@@ -1,158 +1,105 @@
---=========================================================
--- SarScript - Custom UI Framework (Button / Toggle / Input / Label / Notification)
---=========================================================
+--==============================
+-- SarScript UI Framework
+--==============================
 
 local Players = game:GetService("Players")
 local LocalPlayer = Players.LocalPlayer
-local TweenService = game:GetService("TweenService")
-local RunService = game:GetService("RunService")
-local UIS = game:GetService("UserInputService")
 
 local SarScript = {}
 SarScript.__index = SarScript
 
----------------------------------------------------
--- Drag Function
----------------------------------------------------
-local function dragify(Frame)
-    local dragging, dragStart, startPos
-
-    Frame.InputBegan:Connect(function(input)
-        if input.UserInputType == Enum.UserInputType.MouseButton1 then
-            dragging = true
-            dragStart = input.Position
-            startPos = Frame.Position
-
-            input.Changed:Connect(function()
-                if input.UserInputState == Enum.UserInputState.End then
-                    dragging = false
-                end
-            end)
-        end
-    end)
-
-    Frame.InputChanged:Connect(function(input)
-        if input.UserInputType == Enum.UserInputType.MouseMovement then
-            dragInput = input
-        end
-    end)
-
-    RunService.RenderStepped:Connect(function()
-        if dragging and dragInput then
-            local delta = dragInput.Position - dragStart
-            Frame.Position = UDim2.new(
-                startPos.X.Scale, startPos.X.Offset + delta.X,
-                startPos.Y.Scale, startPos.Y.Offset + delta.Y
-            )
-        end
-    end)
-end
-
----------------------------------------------------
--- Create Main Window
----------------------------------------------------
+-- Create Window
 function SarScript:CreateWindow(title)
     local self = setmetatable({}, SarScript)
 
     local Screen = Instance.new("ScreenGui")
-    Screen.Name = "SarScript_UI"
     Screen.Parent = LocalPlayer:WaitForChild("PlayerGui")
 
     local Main = Instance.new("Frame")
-    Main.Size = UDim2.new(0, 480, 0, 350)
-    Main.Position = UDim2.new(0.5, -240, 0.5, -175)
+    Main.Size = UDim2.new(0, 450, 0, 350)
+    Main.Position = UDim2.new(0.5, -225, 0.5, -175)
     Main.BackgroundColor3 = Color3.fromRGB(25, 25, 25)
-    Main.BorderSizePixel = 0
     Main.Parent = Screen
-    dragify(Main)
 
     local Title = Instance.new("TextLabel")
-    Title.Size = UDim2.new(1,0,0,35)
+    Title.Size = UDim2.new(1, 0, 0, 40)
     Title.BackgroundTransparency = 1
-    Title.Text = title
+    Title.Text = title or "SarScript UI"
     Title.Font = Enum.Font.GothamBold
     Title.TextSize = 20
     Title.TextColor3 = Color3.new(1,1,1)
     Title.Parent = Main
 
-    local TabList = Instance.new("Frame")
-    TabList.Size = UDim2.new(0,140,1,-35)
-    TabList.Position = UDim2.new(0,0,0,35)
-    TabList.BackgroundColor3 = Color3.fromRGB(40,40,40)
-    TabList.Parent = Main
+    local Tabs = Instance.new("Frame")
+    Tabs.Size = UDim2.new(0,120,1,-40)
+    Tabs.Position = UDim2.new(0,0,0,40)
+    Tabs.BackgroundColor3 = Color3.fromRGB(35,35,35)
+    Tabs.Parent = Main
 
     local TabLayout = Instance.new("UIListLayout")
-    TabLayout.Parent = TabList
+    TabLayout.Parent = Tabs
+    TabLayout.Padding = UDim.new(0,5)
 
-    local Pages = Instance.new("Frame")
-    Pages.Size = UDim2.new(1,-140,1,-35)
-    Pages.Position = UDim2.new(0,140,0,35)
-    Pages.BackgroundTransparency = 1
-    Pages.Parent = Main
+    local PageHolder = Instance.new("Frame")
+    PageHolder.Size = UDim2.new(1,-120,1,-40)
+    PageHolder.Position = UDim2.new(0,120,0,40)
+    PageHolder.BackgroundTransparency = 1
+    PageHolder.Parent = Main
 
-    self.Main = Main
-    self.Pages = Pages
-    self.TabList = TabList
-    self.Tabs = {}
     self.Screen = Screen
+    self.Tabs = Tabs
+    self.PageHolder = PageHolder
     self.NotificationY = 10
 
     return self
 end
 
----------------------------------------------------
 -- Create Tab
----------------------------------------------------
 function SarScript:CreateTab(name)
+    local TabBtn = Instance.new("TextButton")
+    TabBtn.Size = UDim2.new(1,-10,0,35)
+    TabBtn.BackgroundColor3 = Color3.fromRGB(50,50,50)
+    TabBtn.Text = name
+    TabBtn.Font = Enum.Font.Gotham
+    TabBtn.TextSize = 15
+    TabBtn.TextColor3 = Color3.new(1,1,1)
+    TabBtn.Parent = self.Tabs
+
     local Page = Instance.new("ScrollingFrame")
     Page.Size = UDim2.new(1,0,1,0)
     Page.CanvasSize = UDim2.new(0,0,0,0)
     Page.ScrollBarThickness = 6
     Page.Visible = false
-    Page.Parent = self.Pages
+    Page.Parent = self.PageHolder
 
     local Layout = Instance.new("UIListLayout")
-    Layout.Padding = UDim.new(0,5)
     Layout.Parent = Page
+    Layout.Padding = UDim.new(0,5)
 
-    local Btn = Instance.new("TextButton")
-    Btn.Size = UDim2.new(1,-10,0,32)
-    Btn.BackgroundColor3 = Color3.fromRGB(50,50,50)
-    Btn.Text = name
-    Btn.Font = Enum.Font.Gotham
-    Btn.TextSize = 15
-    Btn.TextColor3 = Color3.new(1,1,1)
-    Btn.Parent = self.TabList
-
-    Btn.MouseButton1Click:Connect(function()
-        for _, t in pairs(self.Tabs) do
-            t.Page.Visible = false
+    TabBtn.MouseButton1Click:Connect(function()
+        for _,v in pairs(self.PageHolder:GetChildren()) do
+            if v:IsA("ScrollingFrame") then v.Visible = false end
         end
         Page.Visible = true
     end)
 
-    local Tab = { Page = Page }
-    table.insert(self.Tabs, Tab)
-
-    ---------------------------------------------------
-    -- UI ELEMENTS
-    ---------------------------------------------------
+    local Tab = {}
 
     function Tab:Label(text)
         local L = Instance.new("TextLabel")
         L.Size = UDim2.new(1,-10,0,30)
         L.BackgroundTransparency = 1
+        L.Text = text
         L.Font = Enum.Font.Gotham
         L.TextSize = 15
         L.TextColor3 = Color3.new(1,1,1)
-        L.Text = text
         L.Parent = Page
     end
 
     function Tab:Button(text, callback)
         local B = Instance.new("TextButton")
         B.Size = UDim2.new(1,-10,0,35)
-        B.BackgroundColor3 = Color3.fromRGB(55,55,55)
+        B.BackgroundColor3 = Color3.fromRGB(70,70,70)
         B.Text = text
         B.Font = Enum.Font.Gotham
         B.TextSize = 15
@@ -165,17 +112,17 @@ function SarScript:CreateTab(name)
 
     function Tab:Toggle(text, default, callback)
         local F = Instance.new("Frame")
-        F.Size = UDim2.new(1,-10,0,36)
-        F.BackgroundColor3 = Color3.fromRGB(55,55,55)
+        F.Size = UDim2.new(1,-10,0,35)
+        F.BackgroundColor3 = Color3.fromRGB(70,70,70)
         F.Parent = Page
 
         local L = Instance.new("TextLabel")
         L.Size = UDim2.new(0.7,0,1,0)
         L.BackgroundTransparency = 1
         L.Text = text
-        L.TextColor3 = Color3.new(1,1,1)
         L.Font = Enum.Font.Gotham
         L.TextSize = 15
+        L.TextColor3 = Color3.new(1,1,1)
         L.Parent = F
 
         local T = Instance.new("TextButton")
@@ -186,6 +133,7 @@ function SarScript:CreateTab(name)
         T.Parent = F
 
         local state = default
+
         T.MouseButton1Click:Connect(function()
             state = not state
             T.Text = state and "ON" or "OFF"
@@ -197,61 +145,42 @@ function SarScript:CreateTab(name)
     function Tab:Input(text, placeholder, callback)
         local Box = Instance.new("TextBox")
         Box.Size = UDim2.new(1,-10,0,35)
-        Box.BackgroundColor3 = Color3.fromRGB(55,55,55)
+        Box.BackgroundColor3 = Color3.fromRGB(70,70,70)
+        Box.Text = ""
         Box.PlaceholderText = placeholder
         Box.Font = Enum.Font.Gotham
         Box.TextSize = 14
         Box.TextColor3 = Color3.new(1,1,1)
-        Box.Text = ""
         Box.Parent = Page
 
         Box.FocusLost:Connect(function(enter)
-            if enter then
-                pcall(callback, Box.Text)
-            end
+            if enter then pcall(callback, Box.Text) end
         end)
     end
 
     return Tab
 end
 
----------------------------------------------------
--- Notification System
----------------------------------------------------
-function SarScript:Notify(msg)
-    local N = Instance.new("Frame")
-    N.Size = UDim2.new(0,300,0,45)
-    N.Position = UDim2.new(1,-10,0,self.NotificationY)
-    N.BackgroundColor3 = Color3.fromRGB(30,30,30)
-    N.BorderSizePixel = 0
-    N.AnchorPoint = Vector2.new(1,0)
-    N.Parent = self.Screen
+-- Notify
+function SarScript:Notify(text)
+    local notif = Instance.new("Frame")
+    notif.Size = UDim2.new(0,280,0,45)
+    notif.Position = UDim2.new(1,20,0,self.NotificationY)
+    notif.BackgroundColor3 = Color3.fromRGB(30,30,30)
+    notif.Parent = self.Screen
 
-    local L = Instance.new("TextLabel")
-    L.Size = UDim2.new(1,0,1,0)
-    L.BackgroundTransparency = 1
-    L.Font = Enum.Font.Gotham
-    L.TextSize = 15
-    L.TextColor3 = Color3.new(1,1,1)
-    L.Text = msg
-    L.Parent = N
-
-    local Bar = Instance.new("Frame")
-    Bar.Size = UDim2.new(1,0,0,4)
-    Bar.Position = UDim2.new(0,0,1,-4)
-    Bar.BackgroundColor3 = Color3.fromRGB(0,170,255)
-    Bar.Parent = N
-
-    self.NotificationY += 55
+    local Label = Instance.new("TextLabel")
+    Label.Size = UDim2.new(1,0,1,0)
+    Label.BackgroundTransparency = 1
+    Label.Text = text
+    Label.Font = Enum.Font.Gotham
+    Label.TextSize = 16
+    Label.TextColor3 = Color3.new(1,1,1)
+    Label.Parent = notif
 
     task.spawn(function()
-        for i = 1, 100 do
-            Bar.Size = UDim2.new(1 - i/100, 0, 0, 4)
-            task.wait(0.035)
-        end
-
-        N:Destroy()
-        self.NotificationY -= 55
+        wait(3)
+        notif:Destroy()
     end)
 end
 
